@@ -1,0 +1,17 @@
+torch~=2.1.2
+numpy~=1.26.3
+torchvision~=0.16.2
+pillow~=10.2.0
+SimpleITK~=2.2.1
+pandas~=2.0.1
+lpips~=0.1.4
+torchmetrics~=1.2.1
+nipype~=1.8.6
+scikit-image~=0.20.0
+scikit-learn~=1.2.2
+lightning~=2.0.2
+monai~=1.2.0+2.ge6ec945e
+nibabel~=5.1.0
+h5py~=3.8.0
+opencv-python~=4.6.0.66
+matplotlib~=3.7.1

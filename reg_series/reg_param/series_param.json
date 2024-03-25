@@ -1,0 +1,85 @@
+{
+  "T1": {
+    "name": [
+      "t1ts",
+      "t1_ts",
+      "T1."
+    ],
+    "bias": true,
+    "reg_target": "None"
+  },
+  "T1CE": {
+    "name": [
+      "t1vi",
+      "ce2",
+      "t1_vi",
+      "T1CE",
+      "CE"
+    ],
+    "reg": "Affine",
+    "reg_target": "T1",
+    "reg_option": {
+      "reg_com": 0
+    },
+    "bias": true
+  },
+  "T2": {
+    "name": [
+      "t2ts",
+      "t2fs",
+      "T2"
+    ],
+    "reg": "Affine",
+    "reg_target": "T1",
+    "reg_option": {
+      "reg_com": 0
+    },
+    "bias": true
+  },
+  "B50": {
+    "name": [
+      "b50",
+      "B50"
+    ],
+    "reg": "Affine",
+    "reg_target": "T2",
+    "reg_option": {
+      "reg_com": 0
+    },
+    "bias": false
+  },
+  "B800": {
+    "name": [
+      "b800",
+      "B800"
+    ],
+    "reg": "B50",
+    "reg_target": "T2",
+    "reg_option": {
+      "reg_com": 0
+    },
+    "bias": false
+  },
+  "B1400": {
+    "name": [
+      "b1400",
+      "B1400"
+    ],
+    "reg": "B50",
+    "reg_option": {
+      "reg_com": 0
+    },
+    "bias": false
+  },
+  "ADC": {
+    "name": [
+      "ADC",
+      "adc"
+    ],
+    "reg": "B50",
+    "reg_option": {
+      "reg_com": 0
+    },
+    "bias": false
+  }
+}
