@@ -20,7 +20,7 @@ def save_json(series_dict):
 
 
 # wrapper function for reading a complete dicom directory with/without registration to one of the images
-def proc_mammo_dcm_dir(dcm_dir, param_file, rep=False):
+def proc_dcm_dir(dcm_dir, param_file, rep=False):
     """
     This function takes a directory containing UCSF air formatted dicom folders
     and converts all relevant files to nifti format. It also processes DTI, makes brain masks, registers the different
@@ -113,7 +113,7 @@ if __name__ == '__main__':
             continue
         try:
             start_t = time.time()
-            serdict = proc_mammo_dcm_dir(dcm, my_param_file, rep=redo)
+            serdict = proc_dcm_dir(dcm, my_param_file, rep=redo)
             elapsed_t = time.time() - start_t
             print("\nCOMPLETED # " + str(i) + " of " + str(len(dcms)) + " in " + str(
                 round(elapsed_t / 60, 2)) + " minute(s)\n")
