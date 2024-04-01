@@ -6,7 +6,7 @@ The code is based on Pytorch lightning
 ## 1. Data preprocess
 **Follow the workflow outlined below.**
 
-First use the `get_body_t1.py` to generate the mask of T1 or anything you want.  
+First use the `resemble_n_get_body/get_body_t1.py` to generate the mask of T1 or anything you want.  
 
 Than use `get_body_all_series.py` to apply the mask on every sequence.  
 
