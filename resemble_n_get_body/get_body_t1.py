@@ -1,14 +1,12 @@
 """
 MRI 身体区域获取,最开始的取body对resample文件夹的操作
 """
-import SimpleITK as sitk
-import os
-import cv2
 import glob
+import os
+
+import SimpleITK as sitk
+import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import ants
-import pandas as pd
 
 
 def morph_operation(img, kernel_size=(5, 5), anchor=(-1, -1), operation_type=cv2.MORPH_OPEN):
@@ -62,6 +60,17 @@ def fill_inter_3D(mask, other_axis=True):
                 mask_final[:, :, i] = fill_inter_bone(mask_final[:, :, i])
     return mask_final.astype(np.uint8)
 
+def fill_inter_3D_with_wall(mask, other_axis=True, wall_dim=1):
+    if not isinstance(mask, np.ndarray):
+        mask = sitk.GetArrayFromImage(mask)
+    for ind in range(mask.shape[0]):
+        if wall_dim == 1:
+            mask[ind, :, 0] = 1
+            mask[ind, :, -1] = 1
+        else:
+            mask[ind, 0, :] = 1
+    return fill_inter_3D(mask, other_axis)
+
 
 def getmaxcomponent(mask_array, min_size=1e4, check_num=10000, print_num=False, id_num=None):
     """
@@ -112,108 +121,102 @@ def getmaxcomponent(mask_array, min_size=1e4, check_num=10000, print_num=False, 
 
 
 if __name__ == '__main__':
-    nii_dir = r'/data/newnas/MJY_file/CE-MRI/test_PCa_data_resample'
-    body_save_folder_path = r'/data/newnas/MJY_file/CE-MRI/test_PCa_data_resample'
+    nii_dir = ""
+    body_save_folder_path = ""
     if not os.path.exists(body_save_folder_path):
         os.mkdir(body_save_folder_path)
     # 所有文件
-    dcms = [item for item in glob.glob(nii_dir + "/*") if os.path.isdir(item)]
+    dcms = [item for item in glob.glob(nii_dir + "/*") if os.path.isfile(item)]
     # 待修正的mask
     # dcms = [os.path.join(nii_dir, str(ids)) for ids in refine_id_list]
-    # dcms = [os.path.join(nii_dir, "10170732")]
+    dcms = [os.path.join(nii_dir, idd+"_0000.nii.gz") for idd in idlist]
     # dcms = dcms[30:]
     # 要操作的id范围
 
     for i, dcm in enumerate(dcms, 1):
-        id_num = os.path.basename(dcm)
+        id_num = os.path.basename(dcm).split("_")[0]
         # if id_num != "0001355518":
         #     continue
         info_dict = {}
         # 获取去除trans_file文件夹的列表
-        nii_list = os.listdir(dcm)
-        if 'trans_file' in nii_list:
-            nii_list.remove("trans_file")
-        # if len(nii_list) > 4:
-        #     raise "{}more then 4 file".format(dcm)
-        for nii_name in nii_list:
-            if 'T1.' in nii_name:
-                img = sitk.ReadImage(os.path.join(dcm, nii_name))
-                ####debugggggggggggggggggggggggggggggggggggg
-                # input_image = img
-                # # 创建中值滤波器
-                # median_filter = sitk.MedianImageFilter()
-                # # 设置滤波器参数
-                # median_filter.SetRadius(7)
-                # # 应用滤波器
-                # output_image = median_filter.Execute(input_image)
-                # new_img = output_image
-                ####debugggggggggggggggggggggggggggggggggggg
-                # # 初始化 K-Means 聚类分割器
-                # kmeans_filter = sitk.ScalarImageKmeansImageFilter()
-                # # 执行聚类分割
-                # kmeans_image = kmeans_filter.Execute(output_image)
-                ####debugggggggggggggggggggggggggggggggggggg
-                # 决定用哪个输出做下一步处理
-                img_array = sitk.GetArrayFromImage(img)
-                # 取大津法的最佳阈值(只能2d)
-                # 2D取阈值法
-                # body_machine_mask = np.zeros(img_array.shape)  # 取同样大小的数组
-                # for layer in range(img_array.shape[0]):
-                #     ret = cv2.threshold(img_array[layer, :, :].astype(np.uint16), 0,
-                #                         np.max(img_array), cv2.THRESH_TRUNC + cv2.THRESH_OTSU)[0]
-                #     body_machine_mask[layer, :, :] = (img_array[layer, :, :] > ret).astype(np.uint8)  # 该层独立做阈值处理
-                ret = 150 #阈值
+        img = sitk.ReadImage(dcm)
+        ####debugggggggggggggggggggggggggggggggggggg
+        # input_image = img
+        # # 创建中值滤波器
+        # median_filter = sitk.MedianImageFilter()
+        # # 设置滤波器参数
+        # median_filter.SetRadius(7)
+        # # 应用滤波器
+        # output_image = median_filter.Execute(input_image)
+        # new_img = output_image
+        ####debugggggggggggggggggggggggggggggggggggg
+        # # 初始化 K-Means 聚类分割器
+        # kmeans_filter = sitk.ScalarImageKmeansImageFilter()
+        # # 执行聚类分割
+        # kmeans_image = kmeans_filter.Execute(output_image)
+        ####debugggggggggggggggggggggggggggggggggggg
+        # 决定用哪个输出做下一步处理
+        img_array = sitk.GetArrayFromImage(img)
+        # 取大津法的最佳阈值(只能2d)
+        # 2D取阈值法
+        # body_machine_mask = np.zeros(img_array.shape)  # 取同样大小的数组
+        # for layer in range(img_array.shape[0]):
+        #     ret = cv2.threshold(img_array[layer, :, :].astype(np.uint16), 0,
+        #                         np.max(img_array), cv2.THRESH_TRUNC + cv2.THRESH_OTSU)[0]
+        #     body_machine_mask[layer, :, :] = (img_array[layer, :, :] > ret).astype(np.uint8)  # 该层独立做阈值处理
+        ret = 150  # 阈值
 
-                # 获取身体mask
-                # body_machine_mask = body_machine_mask.astype(np.uint8)
-                new_img = (img_array > ret).astype(np.uint8)
-                # 填补孔洞
-                new_img = fill_inter_3D(new_img)
-                # 做一次开运算 去伪影
-                new_img = sitk.GetImageFromArray(new_img)
-                new_img = morph_operation(new_img, kernel_size=(7, 7), operation_type=cv2.MORPH_OPEN)
-                # # body_machine_mask = sitk.BinaryMorphologicalClosing(new_img, (5, 5, 5))
-                # 取最大连通域
-                new_img = getmaxcomponent(new_img,
-                                                min_size=1e4,
-                                                check_num=50,
-                                                print_num=False,
-                                                id_num=None)
-                # 填补孔洞
-                new_img = fill_inter_3D(new_img)
-                # 转sitk操作
-                new_img = sitk.GetImageFromArray(new_img)
-                # 腐蚀 去掉细伪影
-                # new_img = sitk.BinaryErode(new_img, (9, 9, 9))
-                new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type="erode")
-                # # 开运算 多一次去掉细伪影
-                # new_img = sitk.BinaryMorphologicalOpening(new_img, (9, 9, 9))
-                new_img = morph_operation(new_img, kernel_size=(9, 9), operation_type=cv2.MORPH_OPEN)
-                # 去除细伪影后去除小连通域
-                new_img = getmaxcomponent(new_img, min_size=1e4, check_num=50, print_num=False)
-                # 去除连通域后膨胀再闭运算
-                # new_img = sitk.BinaryDilate(new_img, (9, 9, 9))
-                # new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type=cv2.MORPH_OPEN)
-                new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type="dilate")
-                # 闭运算 填补可能出现的细节缺漏
-                # new_img = sitk.BinaryMorphologicalClosing(new_img, (9, 9, 9))
-                new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type=cv2.MORPH_CLOSE)
-                # # 膨胀（左右少,上下多，前后更少）获得大一点的mask 提高容错
-                # new_img = sitk.BinaryDilate(new_img, (5, 5, 5))
-                new_img = morph_operation(new_img, kernel_size=(5, 5), operation_type="dilate")
-                # 闭开运算
-                new_img = morph_operation(new_img, kernel_size=(5, 5), operation_type=cv2.MORPH_CLOSE)
-                new_img = sitk.BinaryMorphologicalOpening(new_img, (3, 3, 3))
-                # 转回array再填补孔洞
-                # body_mask_max = sitk.GetArrayFromImage(new_img)
-                # body_mask_max = fill_inter_3D(body_mask_max)
-                # 转回去保存
-                # new_img = sitk.GetImageFromArray(body_mask_max)
-                # new_img = body_mask_max
-                # new_img.CopyInformation(img)
-                save_nii = os.path.join(body_save_folder_path, id_num, "body_mask.nii.gz")
-                # if not os.path.exists(os.path.dirname(save_nii)):
-                #     os.makedirs(os.path.dirname(save_nii))
-                sitk.WriteImage(new_img, save_nii)
-                # sitk.WriteImage(output_image,os.path.dirname(save_nii)+"/median_f_img.nii")
+        # 获取身体mask
+        # body_machine_mask = body_machine_mask.astype(np.uint8)
+        new_img = (img_array > ret).astype(np.uint8)
+        # 填补孔洞
+        new_img = fill_inter_3D(new_img)
+        # 做一次开运算 去伪影
+        new_img = sitk.GetImageFromArray(new_img)
+        new_img = morph_operation(new_img, kernel_size=(7, 7), operation_type=cv2.MORPH_OPEN)
+        # # body_machine_mask = sitk.BinaryMorphologicalClosing(new_img, (5, 5, 5))
+        # 取最大连通域
+        new_img = getmaxcomponent(new_img,
+                                  min_size=1e4,
+                                  check_num=50,
+                                  print_num=False,
+                                  id_num=None)
+        # 填补孔洞
+        new_img = fill_inter_3D_with_wall(new_img, other_axis=True, wall_dim=1)
+        # 转sitk操作
+        new_img = sitk.GetImageFromArray(new_img)
+        # 腐蚀 去掉细伪影
+        # new_img = sitk.BinaryErode(new_img, (9, 9, 9))
+        new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type="erode")
+        new_img = fill_inter_3D_with_wall(new_img, other_axis=True, wall_dim=2)
+        # # 开运算 多一次去掉细伪影
+        # new_img = sitk.BinaryMorphologicalOpening(new_img, (9, 9, 9))
+        new_img = morph_operation(new_img, kernel_size=(9, 9), operation_type=cv2.MORPH_OPEN)
+        # 去除细伪影后去除小连通域
+        new_img = getmaxcomponent(new_img, min_size=1e4, check_num=50, print_num=False)
+        # 去除连通域后膨胀再闭运算
+        # new_img = sitk.BinaryDilate(new_img, (9, 9, 9))
+        # new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type=cv2.MORPH_OPEN)
+        new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type="dilate")
+        # 闭运算 填补可能出现的细节缺漏
+        # new_img = sitk.BinaryMorphologicalClosing(new_img, (9, 9, 9))
+        new_img = morph_operation(new_img, kernel_size=(11, 11), operation_type=cv2.MORPH_CLOSE)
+        # # 膨胀（左右少,上下多，前后更少）获得大一点的mask 提高容错
+        # new_img = sitk.BinaryDilate(new_img, (5, 5, 5))
+        new_img = morph_operation(new_img, kernel_size=(5, 5), operation_type="dilate")
+        # 闭开运算
+        new_img = morph_operation(new_img, kernel_size=(5, 5), operation_type=cv2.MORPH_CLOSE)
+        new_img = sitk.BinaryMorphologicalOpening(new_img, (3, 3, 3))
+        # 转回array再填补孔洞
+        # body_mask_max = sitk.GetArrayFromImage(new_img)
+        # body_mask_max = fill_inter_3D(body_mask_max)
+        # 转回去保存
+        # new_img = sitk.GetImageFromArray(body_mask_max)
+        # new_img = body_mask_max
+        # new_img.CopyInformation(img)
+        save_nii = os.path.join(body_save_folder_path, id_num + ".nii.gz")
+        # if not os.path.exists(os.path.dirname(save_nii)):
+        #     os.makedirs(os.path.dirname(save_nii))
+        sitk.WriteImage(new_img, save_nii)
+        # sitk.WriteImage(output_image,os.path.dirname(save_nii)+"/median_f_img.nii")
         print("{} finished".format(dcm), "{}/{}".format(i, len(dcms)))
